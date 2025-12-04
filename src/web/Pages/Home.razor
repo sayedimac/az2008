@@ -1,0 +1,37 @@
+﻿@page "/"
+
+<PageTitle>CopilotTest - Azure Storage Browser</PageTitle>
+
+<h1>Welcome to CopilotTest</h1>
+
+<p>This is a Blazor WebAssembly app that connects to Azure Functions to browse Azure Storage resources.</p>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Blob Storage Browser</h5>
+            </div>
+            <div class="card-body">
+                <p>Browse and list blobs in your Azure Storage containers.</p>
+                <a href="blobs" class="btn btn-primary">Browse Blobs</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Table Data Browser</h5>
+            </div>
+            <div class="card-body">
+                <p>Read data from Azure Storage Tables using partition and row keys.</p>
+                <a href="tabledata" class="btn btn-primary">Browse Table Data</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <h4>Getting Started</h4>
+    <p>To use this application, configure the <code>StorageConnectionString</code> environment variable in your Azure Functions app settings with your Azure Storage Account connection string.</p>
+</div>
