@@ -1,0 +1,164 @@
+@page "/tabledata"
+@page "/tabledata/{TableName}/{PartitionKey}/{RowKey}"
+@inject HttpClient Http
+
+<PageTitle>Table Data Browser</PageTitle>
+
+<h1>Table Data Browser</h1>
+
+<div class="mb-3">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label for="tableNameInput" class="form-label">Table Name:</label>
+            <input type="text" class="form-control" id="tableNameInput" @bind="tableName" placeholder="Enter table name" />
+        </div>
+        <div class="col-md-4">
+            <label for="partitionKeyInput" class="form-label">Partition Key:</label>
+            <input type="text" class="form-control" id="partitionKeyInput" @bind="partitionKey" placeholder="Enter partition key" />
+        </div>
+        <div class="col-md-4">
+            <label for="rowKeyInput" class="form-label">Row Key:</label>
+            <input type="text" class="form-control" id="rowKeyInput" @bind="rowKey" placeholder="Enter row key" />
+        </div>
+    </div>
+    <div class="mt-3">
+        <button class="btn btn-primary" @onclick="LoadTableData" disabled="@loading">
+            @if (loading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Loading...</span>
+            }
+            else
+            {
+                <span>Load Data</span>
+            }
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@if (entityData != null && entityData.Any())
+{
+    <div class="card">
+        <div class="card-header">
+            <strong>Entity Data</strong>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var kvp in entityData)
+                    {
+                        <tr>
+                            <td><strong>@kvp.Key</strong></td>
+                            <td>@(kvp.Value?.ToString() ?? "(null)")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if (!loading && !string.IsNullOrEmpty(tableName) && entityData != null)
+{
+    <p>No data found for the specified entity.</p>
+}
+
+@code {
+    [Parameter]
+    public string? TableName { get; set; }
+
+    [Parameter]
+    public string? PartitionKey { get; set; }
+
+    [Parameter]
+    public string? RowKey { get; set; }
+
+    private string tableName = "";
+    private string partitionKey = "";
+    private string rowKey = "";
+    private Dictionary<string, object?>? entityData;
+    private bool loading = false;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(TableName))
+            tableName = TableName;
+        if (!string.IsNullOrEmpty(PartitionKey))
+            partitionKey = PartitionKey;
+        if (!string.IsNullOrEmpty(RowKey))
+            rowKey = RowKey;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var hasParams = !string.IsNullOrEmpty(TableName) && 
+                        !string.IsNullOrEmpty(PartitionKey) && 
+                        !string.IsNullOrEmpty(RowKey);
+        
+        var paramsChanged = TableName != tableName || 
+                            PartitionKey != partitionKey || 
+                            RowKey != rowKey;
+
+        if (hasParams && paramsChanged)
+        {
+            tableName = TableName!;
+            partitionKey = PartitionKey!;
+            rowKey = RowKey!;
+            await LoadTableData();
+        }
+    }
+
+    private async Task LoadTableData()
+    {
+        if (string.IsNullOrWhiteSpace(tableName))
+        {
+            errorMessage = "Please enter a table name.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(partitionKey))
+        {
+            errorMessage = "Please enter a partition key.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(rowKey))
+        {
+            errorMessage = "Please enter a row key.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        entityData = null;
+
+        try
+        {
+            var url = $"api/table/{Uri.EscapeDataString(tableName)}/{Uri.EscapeDataString(partitionKey)}/{Uri.EscapeDataString(rowKey)}";
+            entityData = await Http.GetFromJsonAsync<Dictionary<string, object?>>(url);
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Error loading table data: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

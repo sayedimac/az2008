@@ -1,0 +1,126 @@
+@page "/blobs"
+@page "/blobs/{ContainerName}"
+@inject HttpClient Http
+
+<PageTitle>Blob Storage Browser</PageTitle>
+
+<h1>Blob Storage Browser</h1>
+
+<div class="mb-3">
+    <label for="containerInput" class="form-label">Container Name:</label>
+    <div class="input-group">
+        <input type="text" class="form-control" id="containerInput" @bind="containerName" placeholder="Enter container name" />
+        <button class="btn btn-primary" @onclick="LoadBlobs" disabled="@loading">
+            @if (loading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Loading...</span>
+            }
+            else
+            {
+                <span>Load Blobs</span>
+            }
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@if (blobs != null && blobs.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Size (bytes)</th>
+                <th>Content Type</th>
+                <th>Last Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var blob in blobs)
+            {
+                <tr>
+                    <td>@blob.Name</td>
+                    <td>@blob.Size</td>
+                    <td>@blob.ContentType</td>
+                    <td>@blob.LastModified?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (!loading && !string.IsNullOrEmpty(containerName) && blobs != null)
+{
+    <p>No blobs found in container '@containerName'.</p>
+}
+
+@code {
+    [Parameter]
+    public string? ContainerName { get; set; }
+
+    private string containerName = "";
+    private List<BlobInfo>? blobs;
+    private bool loading = false;
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(ContainerName))
+        {
+            containerName = ContainerName;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(ContainerName) && ContainerName != containerName)
+        {
+            containerName = ContainerName;
+            await LoadBlobs();
+        }
+    }
+
+    private async Task LoadBlobs()
+    {
+        if (string.IsNullOrWhiteSpace(containerName))
+        {
+            errorMessage = "Please enter a container name.";
+            return;
+        }
+
+        loading = true;
+        errorMessage = null;
+        blobs = null;
+
+        try
+        {
+            blobs = await Http.GetFromJsonAsync<List<BlobInfo>>($"api/blobs/{Uri.EscapeDataString(containerName)}");
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Error loading blobs: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unexpected error: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public class BlobInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public long Size { get; set; }
+        public string ContentType { get; set; } = string.Empty;
+        public DateTime? LastModified { get; set; }
+    }
+}

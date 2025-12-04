@@ -1,0 +1,65 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Bb]uild/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Rider files
+.idea/
+*.sln.iml
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Azure Functions local settings
+local.settings.json
+
+# Publish output
+[Pp]ublish/
+[Dd]ist/
+
+# Blazor WASM publish output
+wwwroot/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# macOS
+.DS_Store
+
+# JetBrains
+*.swp
+*~.nib
+DerivedData/
